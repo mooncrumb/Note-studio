@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>笔记工作台</title>
+<title>Note Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@500;900&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&family=Ma+Shan+Zheng&display=swap">
@@ -12,63 +12,63 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></span><b>笔记工作台</b></div>
-  <nav class="appnav" aria-label="功能">
-    <a href="#sim" data-page="sim">发布模拟器</a>
-    <a href="#lib" data-page="lib">素材库</a>
-    <a href="#edit" data-page="edit">图片编辑</a>
+  <div class="brand"><span class="mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></span><b>Note Studio</b></div>
+  <nav class="appnav" aria-label="Features">
+    <a href="#sim" data-page="sim">Publish Simulator</a>
+    <a href="#lib" data-page="lib">Library</a>
+    <a href="#edit" data-page="edit">Image Editor</a>
   </nav>
   <div class="top-r">
     <span id="saveStatus" class="status" role="status"></span>
-    <button type="button" class="linkbtn" id="sideOpen" hidden>展开侧边栏</button>
-    <button type="button" class="pill" id="backupBtn" aria-haspopup="dialog" aria-expanded="false">备份</button>
-    <button type="button" class="acct" id="acctBtn" aria-haspopup="dialog" aria-expanded="false" title="改预览账号"><span class="av big" id="topAv" aria-hidden="true"></span><span id="topName"></span></button>
+    <button type="button" class="linkbtn" id="sideOpen" hidden>Expand sidebar</button>
+    <button type="button" class="pill" id="backupBtn" aria-haspopup="dialog" aria-expanded="false">Backup</button>
+    <button type="button" class="acct" id="acctBtn" aria-haspopup="dialog" aria-expanded="false" title="Edit preview account"><span class="av big" id="topAv" aria-hidden="true"></span><span id="topName"></span></button>
   </div>
-  <div class="pop" id="acctPop" role="dialog" aria-label="预览账号" hidden>
-    <h3>预览账号 <span class="hint">只影响手机预览</span></h3>
-    <div class="row"><span class="av big" id="accAv" aria-hidden="true"></span><input id="accName" class="inp" type="text" aria-label="账号名称" style="flex:1;min-width:0"><button type="button" class="pill" id="avatarBtn">换头像</button></div>
-    <div class="field"><label for="accBio">个人简介</label><input id="accBio" class="inp" type="text" placeholder="显示在个人主页"></div>
+  <div class="pop" id="acctPop" role="dialog" aria-label="Preview account" hidden>
+    <h3>Preview account <span class="hint">Only affects the phone preview</span></h3>
+    <div class="row"><span class="av big" id="accAv" aria-hidden="true"></span><input id="accName" class="inp" type="text" aria-label="Account name" style="flex:1;min-width:0"><button type="button" class="pill" id="avatarBtn">Change avatar</button></div>
+    <div class="field"><label for="accBio">Bio</label><input id="accBio" class="inp" type="text" placeholder="Shown on your profile"></div>
     <div class="half" style="grid-template-columns:1fr 1fr">
-      <div class="field"><label for="accFans">粉丝</label><input id="accFans" class="inp" type="text" inputmode="numeric"></div>
-      <div class="field"><label for="accLikes">获赞与收藏</label><input id="accLikes" class="inp" type="text" inputmode="numeric"></div>
+      <div class="field"><label for="accFans">Followers</label><input id="accFans" class="inp" type="text" inputmode="numeric"></div>
+      <div class="field"><label for="accLikes">Likes & saves</label><input id="accLikes" class="inp" type="text" inputmode="numeric"></div>
     </div>
   </div>
-  <div class="pop" id="backupPop" role="dialog" aria-label="备份" hidden>
-    <h3>备份</h3>
-    <p class="hint" style="font-size:13px">所有笔记、素材和图片都自动存在这台电脑的这个浏览器里。换电脑或换浏览器时，先在这里导出备份，再到新的地方导入。</p>
-    <button type="button" class="btn primary" id="exportBtn">导出全部内容</button>
-    <button type="button" class="btn" id="importBtn">导入备份文件</button>
+  <div class="pop" id="backupPop" role="dialog" aria-label="Backup" hidden>
+    <h3>Backup</h3>
+    <p class="hint" style="font-size:13px">All notes, assets and images are saved automatically in this browser on this computer. When you switch computer or browser, export a backup here first, then import it on the other one.</p>
+    <button type="button" class="btn primary" id="exportBtn">Export everything</button>
+    <button type="button" class="btn" id="importBtn">Import a backup</button>
     <p class="hint" id="storageInfo"></p>
   </div>
 </header>
 
 <section class="page" id="pg-sim">
 <div class="frame">
-  <nav class="side" aria-label="后台菜单">
-    <div class="pub" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M10 7v6M7 10h6"/></svg>发布笔记<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5l4 4 4-4"/></svg></div>
-    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 9l7-6 7 6v7.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M7.5 12.5c1.4 1.3 3.6 1.3 5 0" stroke-linecap="round"/></svg>首页</button>
-    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3.5" y="2.5" width="13" height="15" rx="2.5"/><path d="M7 8h6M7 12h4"/></svg>笔记管理</button>
+  <nav class="side" aria-label="Dashboard menu">
+    <div class="pub" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M10 7v6M7 10h6"/></svg>Publish note<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5l4 4 4-4"/></svg></div>
+    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 9l7-6 7 6v7.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M7.5 12.5c1.4 1.3 3.6 1.3 5 0" stroke-linecap="round"/></svg>Home</button>
+    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3.5" y="2.5" width="13" height="15" rx="2.5"/><path d="M7 8h6M7 12h4"/></svg>Notes</button>
     <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M2.5 7h15M8 10l-2 2 2 2M12 10l2 2-2 2M10.7 9.6l-1.4 4.8"/></svg><span class="grow">Builder hub</span><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l4-4 4 4"/></svg></button>
-    <button type="button" class="nav sub" data-off>小工具</button>
+    <button type="button" class="nav sub" data-off>Widgets</button>
     <button type="button" class="nav sub" data-off>Red Skill</button>
-    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="15" height="11" rx="2.5"/><path d="M6 10.5l2.5-2.5 2 2 3.5-3.5M6 17h8"/></svg><span class="grow">数据看板</span><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5l4 4 4-4"/></svg></button>
-    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V4h10l-2 3.5L14 11H4"/></svg>活动中心</button>
-    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14.5a6 6 0 1 1 6 0V16H7z"/><path d="M8 18.5h4"/></svg>笔记灵感</button>
-    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4L2 8l8 4 8-4z"/><path d="M5.5 10v4c2.5 2 6.5 2 9 0v-4"/></svg>创作学院</button>
-    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="2.5" width="12" height="15" rx="2.5"/><path d="M7.5 7h5M7.5 10.5h5M7.5 14h3"/></svg>创作百科</button>
+    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="15" height="11" rx="2.5"/><path d="M6 10.5l2.5-2.5 2 2 3.5-3.5M6 17h8"/></svg><span class="grow">Dashboard</span><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5l4 4 4-4"/></svg></button>
+    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V4h10l-2 3.5L14 11H4"/></svg>Events</button>
+    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14.5a6 6 0 1 1 6 0V16H7z"/><path d="M8 18.5h4"/></svg>Inspiration</button>
+    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4L2 8l8 4 8-4z"/><path d="M5.5 10v4c2.5 2 6.5 2 9 0v-4"/></svg>Academy</button>
+    <button type="button" class="nav" data-off><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="2.5" width="12" height="15" rx="2.5"/><path d="M7.5 7h5M7.5 10.5h5M7.5 14h3"/></svg>Wiki</button>
     <div class="spacer"></div>
-    <button type="button" class="nav" id="sideClose"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h14M9 10h8M3 15h14M6 8l-2.5 2L6 12"/></svg>收起侧边栏</button>
+    <button type="button" class="nav" id="sideClose"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h14M9 10h8M3 15h14M6 8l-2.5 2L6 12"/></svg>Collapse sidebar</button>
   </nav>
 
   <main class="work">
     <div class="tabsrow">
-      <div class="tabs" role="tablist" aria-label="笔记类型">
-        <button class="tab" role="tab" data-tab="video">上传视频</button>
-        <button class="tab" role="tab" data-tab="image">上传图文</button>
-        <button class="tab" role="tab" data-tab="article">写长文</button>
-        <button class="tab" role="tab" data-tab="podcast">发播客</button>
+      <div class="tabs" role="tablist" aria-label="Note type">
+        <button class="tab" role="tab" data-tab="video">Upload video</button>
+        <button class="tab" role="tab" data-tab="image">Image note</button>
+        <button class="tab" role="tab" data-tab="article">Article</button>
+        <button class="tab" role="tab" data-tab="podcast">Podcast</button>
       </div>
-      <button type="button" class="drafts" id="draftsBtn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="3" width="14" height="12" rx="2.5"/><path d="M2 9.5h4l1 2h4l1-2h4"/></svg>草稿箱(0)</button>
+      <button type="button" class="drafts" id="draftsBtn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="3" width="14" height="12" rx="2.5"/><path d="M2 9.5h4l1 2h4l1-2h4"/></svg>Drafts (0)</button>
     </div>
 
     <div id="uploadView">
@@ -84,27 +84,27 @@
       <div class="form">
         <section class="card imgsec" id="imgSec" aria-labelledby="hImg">
           <div class="chead">
-            <h2 id="hImg">图片编辑 <span class="n" id="imgCount"></span></h2>
-            <button type="button" class="icobtn" id="clearImgs" aria-label="清空图片" title="清空图片"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.8 6.5v4.5M9.2 6.5v4.5"/></svg></button>
+            <h2 id="hImg">Image editor <span class="n" id="imgCount"></span></h2>
+            <button type="button" class="icobtn" id="clearImgs" aria-label="Clear photos" title="Clear photos"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.8 6.5v4.5M9.2 6.5v4.5"/></svg></button>
             <span class="grow"></span>
-            <button type="button" class="pill" id="coverTip"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5l1.3 3.2 3.2 1.3-3.2 1.3L7 10.5 5.7 7.3 2.5 6l3.2-1.3zM11.5 10l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5z"/></svg>获取封面建议</button>
+            <button type="button" class="pill" id="coverTip"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5l1.3 3.2 3.2 1.3-3.2 1.3L7 10.5 5.7 7.3 2.5 6l3.2-1.3zM11.5 10l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5z"/></svg>Cover tips</button>
           </div>
-          <div class="imgs" id="imgs" aria-label="图片，可拖拽上传"></div>
-          <p class="hint">第一张是封面，建议 3:4（1080×1440）。悬停图片可调整顺序或删除，也可以把图片拖到这里。</p>
+          <div class="imgs" id="imgs" aria-label="Photos, drag to upload"></div>
+          <p class="hint">The first photo is the cover. 3:4 (1080×1440) recommended. Hover a photo to reorder or delete it, or drag photos here.</p>
         </section>
 
-        <section class="card" aria-label="标题和正文">
+        <section class="card" aria-label="Title and body">
           <div class="tline">
-            <input id="title" type="text" placeholder="填写标题会有更多赞哦" aria-label="标题">
+            <input id="title" type="text" placeholder="A title gets more likes" aria-label="Title">
             <span class="cnt" id="titleCount"></span>
-            <button type="button" class="pill" id="smartTitle">智能标题<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5l3 3 3-3"/></svg></button>
+            <button type="button" class="pill" id="smartTitle">Smart title<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5l3 3 3-3"/></svg></button>
           </div>
-          <textarea id="body" class="btext" placeholder="输入正文描述，真诚有价值的分享予人温暖" aria-label="正文"></textarea>
-          <div class="sugg" id="sugg" aria-label="推荐话题"></div>
+          <textarea id="body" class="btext" placeholder="Write your note. Honest, useful sharing resonates." aria-label="Body"></textarea>
+          <div class="sugg" id="sugg" aria-label="Suggested topics"></div>
           <div class="tools">
-            <button type="button" class="tool" id="tagBtn" aria-haspopup="true"><b>#</b> 话题<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5l3 3 3-3"/></svg></button>
-            <button type="button" class="tool" id="atBtn"><b>@</b> 用户</button>
-            <button type="button" class="tool" id="emoBtn" aria-haspopup="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="6.2"/><path d="M5.3 9.6c1.4 1.6 4 1.6 5.4 0M6 6.3v.1M10 6.3v.1"/></svg> 表情</button>
+            <button type="button" class="tool" id="tagBtn" aria-haspopup="true"><b>#</b> Topic<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5l3 3 3-3"/></svg></button>
+            <button type="button" class="tool" id="atBtn"><b>@</b> User</button>
+            <button type="button" class="tool" id="emoBtn" aria-haspopup="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="6.2"/><path d="M5.3 9.6c1.4 1.6 4 1.6 5.4 0M6 6.3v.1M10 6.3v.1"/></svg> Emoji</button>
             <span class="grow"></span>
             <span class="cnt" id="topicCount"></span>
             <span class="cnt" id="bodyCount"></span>
@@ -114,62 +114,62 @@
         </section>
 
         <section class="card" id="cSet" aria-labelledby="hSet">
-          <div class="chead"><h2 id="hSet">内容设置</h2><span class="grow"></span><button type="button" class="fold" data-fold="cSet" aria-expanded="true"><span>收起</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5l3-3 3 3"/></svg></button></div>
+          <div class="chead"><h2 id="hSet">Content settings</h2><span class="grow"></span><button type="button" class="fold" data-fold="cSet" aria-expanded="true"><span>Collapse</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5l3-3 3 3"/></svg></button></div>
           <div class="cbody">
             <div>
-              <p class="lbl">加入合集</p>
-              <div class="box"><span class="grow hint" style="font-size:13px">汇集系列视频，有利于连续性观看</span><button type="button" class="pill" data-toast="模拟页面不能创建合集">创建合集</button></div>
+              <p class="lbl">Add to a collection</p>
+              <div class="box"><span class="grow hint" style="font-size:13px">Group a series together for continuous viewing</span><button type="button" class="pill" data-toast="The simulator can’t create collections">Create collection</button></div>
             </div>
             <div class="half">
               <div>
-                <p class="lbl">原创声明</p>
-                <div class="box"><span class="grow" id="origTxt">声明原创</span><label class="sw"><input type="checkbox" id="original" aria-label="原创声明"><span></span></label></div>
+                <p class="lbl">Original-content claim</p>
+                <div class="box"><span class="grow" id="origTxt">Claim original</span><label class="sw"><input type="checkbox" id="original" aria-label="Original-content claim"><span></span></label></div>
               </div>
               <div>
-                <p class="lbl"><label for="statement">添加内容类型声明</label></p>
+                <p class="lbl"><label for="statement">Add a content-type label</label></p>
                 <select id="statement" class="box">
-                  <option value="">不添加声明</option>
-                  <option value="笔记含 AI 合成内容">笔记含 AI 合成内容</option>
+                  <option value="">No label</option>
+                  <option value="Note contains AI-generated content">Note contains AI-generated content</option>
                 </select>
               </div>
             </div>
             <div>
-              <p class="lbl">添加组件</p>
+              <p class="lbl">Add components</p>
               <div class="comps" id="comps">
-                <label class="box comp" id="locBox"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 14.5s5-4.6 5-8.3A5 5 0 0 0 3 6.2c0 3.7 5 8.3 5 8.3z"/><circle cx="8" cy="6.3" r="1.7"/></svg><input id="location" type="text" placeholder="添加地点" aria-label="添加地点"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5l3 3 3-3"/></svg></label>
+                <label class="box comp" id="locBox"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 14.5s5-4.6 5-8.3A5 5 0 0 0 3 6.2c0 3.7 5 8.3 5 8.3z"/><circle cx="8" cy="6.3" r="1.7"/></svg><input id="location" type="text" placeholder="Add location" aria-label="Add location"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5l3 3 3-3"/></svg></label>
               </div>
             </div>
             <div>
-              <div class="chead" style="margin-bottom:8px"><p class="lbl" style="margin:0">关联活动</p><span class="grow"></span><button type="button" class="fold" data-toast="模拟页面只放了两个示例活动">更多 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3l3 3-3 3"/></svg></button></div>
+              <div class="chead" style="margin-bottom:8px"><p class="lbl" style="margin:0">Linked events</p><span class="grow"></span><button type="button" class="fold" data-toast="The simulator only includes two sample events">More <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3l3 3-3 3"/></svg></button></div>
               <div class="evs" id="evs"></div>
             </div>
           </div>
         </section>
 
         <section class="card" id="cMore" aria-labelledby="hMore">
-          <div class="chead"><h2 id="hMore">更多设置</h2><span class="grow"></span><button type="button" class="fold" data-fold="cMore" aria-expanded="true"><span>收起</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5l3-3 3 3"/></svg></button></div>
+          <div class="chead"><h2 id="hMore">More settings</h2><span class="grow"></span><button type="button" class="fold" data-fold="cMore" aria-expanded="true"><span>Collapse</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5l3-3 3 3"/></svg></button></div>
           <div class="cbody" style="gap:6px">
-            <div class="srow"><span class="k">允许正文复制<span class="hint">关闭后，别人不能复制你的正文</span></span><label class="sw"><input type="checkbox" id="allowCopy" aria-label="允许正文复制"><span></span></label></div>
-            <div class="srow"><span class="k"><label for="visibility">权限设置</label></span><select id="visibility" class="box" style="width:auto;min-width:180px"><option value="public">公开可见</option><option value="private">仅自己可见</option></select></div>
-            <div class="srow"><span class="k">定时发布</span><label class="sw"><input type="checkbox" id="schedOn" aria-label="定时发布"><span></span></label></div>
-            <input id="schedAt" class="inp" type="datetime-local" aria-label="定时发布时间" style="max-width:280px" hidden>
+            <div class="srow"><span class="k">Allow copying text<span class="hint">When off, others can't copy your text</span></span><label class="sw"><input type="checkbox" id="allowCopy" aria-label="Allow copying text"><span></span></label></div>
+            <div class="srow"><span class="k"><label for="visibility">Visibility</label></span><select id="visibility" class="box" style="width:auto;min-width:180px"><option value="public">Public</option><option value="private">Private</option></select></div>
+            <div class="srow"><span class="k">Schedule</span><label class="sw"><input type="checkbox" id="schedOn" aria-label="Schedule"><span></span></label></div>
+            <input id="schedAt" class="inp" type="datetime-local" aria-label="Scheduled time" style="max-width:280px" hidden>
           </div>
         </section>
 
         <div class="bar">
-          <button type="button" class="btn" id="saveBtn" title="存进草稿箱（内容本来就会自动保存）">暂存离开</button>
-          <button type="button" class="btn primary" id="pubBtn">发布</button>
+          <button type="button" class="btn" id="saveBtn" title="Save to drafts (content is auto-saved)">Save & leave</button>
+          <button type="button" class="btn primary" id="pubBtn">Publish</button>
         </div>
       </div>
 
-      <aside class="preview" aria-label="手机预览">
-        <div class="seg" role="group" aria-label="预览">
-          <button type="button" data-view="detail" aria-pressed="true">笔记预览</button>
-          <button type="button" data-view="home" aria-pressed="false">封面预览</button>
+      <aside class="preview" aria-label="Phone preview">
+        <div class="seg" role="group" aria-label="Preview">
+          <button type="button" data-view="detail" aria-pressed="true">Note preview</button>
+          <button type="button" data-view="home" aria-pressed="false">Cover preview</button>
         </div>
         <div class="phone"><div class="screen" id="screen"></div></div>
-        <button type="button" class="linkbtn" data-view="profile">看个人主页的样子</button>
-        <p class="pv-cap">示意效果，实际显示以小红书 App 为准</p>
+        <button type="button" class="linkbtn" data-view="profile">See the profile view</button>
+        <p class="pv-cap">For reference only. The real look depends on the Xiaohongshu app.</p>
       </aside>
     </div>
   </main>
@@ -180,24 +180,24 @@
   <div class="libwrap" id="libDrop">
     <div class="libbar">
       <div class="row">
-        <button type="button" class="btn primary sm" id="libUpload">上传文件</button>
-        <button type="button" class="btn sm" id="libText">写文字</button>
-        <button type="button" class="btn sm" id="libLink">加链接</button>
+        <button type="button" class="btn primary sm" id="libUpload">Upload files</button>
+        <button type="button" class="btn sm" id="libText">Add text</button>
+        <button type="button" class="btn sm" id="libLink">Add link</button>
       </div>
-      <div class="seg libf" role="group" aria-label="筛选" id="libFilter">
-        <button type="button" data-f="all" aria-pressed="true">全部</button>
-        <button type="button" data-f="image" aria-pressed="false">图片</button>
-        <button type="button" data-f="file" aria-pressed="false">文件</button>
-        <button type="button" data-f="text" aria-pressed="false">文字</button>
-        <button type="button" data-f="link" aria-pressed="false">链接</button>
+      <div class="seg libf" role="group" aria-label="Filter" id="libFilter">
+        <button type="button" data-f="all" aria-pressed="true">All</button>
+        <button type="button" data-f="image" aria-pressed="false">Images</button>
+        <button type="button" data-f="file" aria-pressed="false">Files</button>
+        <button type="button" data-f="text" aria-pressed="false">Text</button>
+        <button type="button" data-f="link" aria-pressed="false">Links</button>
       </div>
-      <input class="inp libsearch" id="libSearch" type="search" placeholder="搜索名称、备注或文字内容" aria-label="搜索素材">
+      <input class="inp libsearch" id="libSearch" type="search" placeholder="Search by name, note or text" aria-label="Search assets">
     </div>
-    <p class="hint libtip">图片、PDF、Word、Excel、PPT 等文件都可以直接拖到这个页面上传。不支持视频。</p>
+    <p class="hint libtip">Drag images, PDF, Word, Excel, PPT and other files onto this page to upload. Videos are not supported.</p>
     <div class="libgrid" id="libGrid"></div>
     <div class="libempty" id="libEmpty" hidden>
-      <b>素材库还是空的</b>
-      <span>上传图片和文件，或者记一段文字、存一个链接。</span>
+      <b>The library is empty</b>
+      <span>Upload images and files, or jot down a note or save a link.</span>
     </div>
   </div>
 </section>
@@ -206,104 +206,104 @@
   <div class="edwrap">
     <div class="card edstage">
       <div class="chead">
-        <h2 id="edName">图片编辑</h2>
+        <h2 id="edName">image editor</h2>
         <span class="n" id="edSize"></span>
         <span class="grow"></span>
-        <button type="button" class="pill" id="edResetAll" hidden>全部还原</button>
+        <button type="button" class="pill" id="edResetAll" hidden>Reset all</button>
       </div>
       <div class="edcanvas" id="edCanvasWrap">
-        <canvas id="edCanvas" aria-label="图片编辑区域"></canvas>
+        <canvas id="edCanvas" aria-label="Image editing area"></canvas>
         <div class="edempty" id="edEmpty">
-          <b>打开一张图片开始编辑</b>
+          <b>Open an image to start editing</b>
           <div class="row" style="justify-content:center">
-            <button type="button" class="btn primary sm" data-ed-open="file">从电脑打开</button>
-            <button type="button" class="btn sm" data-ed-open="lib">从素材库选</button>
+            <button type="button" class="btn primary sm" data-ed-open="file">Open from computer</button>
+            <button type="button" class="btn sm" data-ed-open="lib">Choose from library</button>
           </div>
         </div>
       </div>
-      <p class="hint" id="edHint">点文字可以选中，按住拖动可以移动位置。</p>
+      <p class="hint" id="edHint">Click text to select it, hold and drag to move it.</p>
     </div>
 
     <aside class="edpanel" id="edPanel">
       <section class="card">
-        <div class="chead"><h2>打开图片</h2></div>
+        <div class="chead"><h2>Open image</h2></div>
         <div class="row">
-          <button type="button" class="btn sm" data-ed-open="file">从电脑打开</button>
-          <button type="button" class="btn sm" data-ed-open="lib">从素材库选</button>
+          <button type="button" class="btn sm" data-ed-open="file">Open from computer</button>
+          <button type="button" class="btn sm" data-ed-open="lib">Choose from library</button>
         </div>
         <p class="hint" id="edOrigin"></p>
       </section>
 
       <section class="card ed-need">
-        <div class="chead"><h2>裁剪</h2><span class="grow"></span><button type="button" class="pill" id="edCropBtn">开始裁剪</button></div>
-        <div class="seg" role="group" aria-label="裁剪比例" id="edRatios">
-          <button type="button" data-r="0" aria-pressed="true">自由</button>
+        <div class="chead"><h2>Crop</h2><span class="grow"></span><button type="button" class="pill" id="edCropBtn">Start crop</button></div>
+        <div class="seg" role="group" aria-label="Crop ratio" id="edRatios">
+          <button type="button" data-r="0" aria-pressed="true">Free</button>
           <button type="button" data-r="0.75" aria-pressed="false">3:4</button>
           <button type="button" data-r="1" aria-pressed="false">1:1</button>
           <button type="button" data-r="1.3333" aria-pressed="false">4:3</button>
           <button type="button" data-r="0.5625" aria-pressed="false">9:16</button>
         </div>
-        <p class="hint">小红书图文推荐 3:4。拖动四个角调大小，拖动中间移动位置。</p>
+        <p class="hint">3:4 is recommended. Drag the corners to resize, drag the middle to move.</p>
       </section>
 
       <section class="card ed-need">
-        <div class="chead"><h2>旋转和翻转</h2></div>
+        <div class="chead"><h2>Rotate & flip</h2></div>
         <div class="row">
-          <button type="button" class="btn sm" id="edRotL">向左转</button>
-          <button type="button" class="btn sm" id="edRotR">向右转</button>
-          <button type="button" class="btn sm" id="edFlip">水平翻转</button>
+          <button type="button" class="btn sm" id="edRotL">Rotate left</button>
+          <button type="button" class="btn sm" id="edRotR">Rotate right</button>
+          <button type="button" class="btn sm" id="edFlip">Flip horizontal</button>
         </div>
       </section>
 
       <section class="card ed-need">
-        <div class="chead"><h2>调色</h2><span class="grow"></span><button type="button" class="pill" id="edAdjReset">重置</button></div>
-        <label class="rng"><span>亮度</span><input type="range" min="-100" max="100" value="0" data-adj="b"><output>0</output></label>
-        <label class="rng"><span>对比度</span><input type="range" min="-100" max="100" value="0" data-adj="c"><output>0</output></label>
-        <label class="rng"><span>饱和度</span><input type="range" min="-100" max="100" value="0" data-adj="s"><output>0</output></label>
-        <label class="rng"><span>色温</span><input type="range" min="-100" max="100" value="0" data-adj="t"><output>0</output></label>
+        <div class="chead"><h2>Adjust</h2><span class="grow"></span><button type="button" class="pill" id="edAdjReset">Reset</button></div>
+        <label class="rng"><span>Brightness</span><input type="range" min="-100" max="100" value="0" data-adj="b"><output>0</output></label>
+        <label class="rng"><span>Contrast</span><input type="range" min="-100" max="100" value="0" data-adj="c"><output>0</output></label>
+        <label class="rng"><span>Saturation</span><input type="range" min="-100" max="100" value="0" data-adj="s"><output>0</output></label>
+        <label class="rng"><span>Warmth</span><input type="range" min="-100" max="100" value="0" data-adj="t"><output>0</output></label>
       </section>
 
       <section class="card ed-need">
-        <div class="chead"><h2>文字</h2><span class="grow"></span><button type="button" class="pill" id="edAddText">添加文字</button></div>
+        <div class="chead"><h2>Text</h2><span class="grow"></span><button type="button" class="pill" id="edAddText">Add text</button></div>
         <div id="edTextForm" class="edtf" hidden>
-          <textarea class="inp" id="tfText" rows="2" aria-label="文字内容"></textarea>
+          <textarea class="inp" id="tfText" rows="2" aria-label="Text content"></textarea>
           <div class="half" style="grid-template-columns:1fr 1fr">
-            <div class="field"><label for="tfFont">字体</label>
+            <div class="field"><label for="tfFont">Font</label>
               <select id="tfFont" class="box">
-                <option value="Noto Sans SC">思源黑体</option>
-                <option value="Smiley Sans Oblique">得意黑</option>
-                <option value="ZCOOL QingKe HuangYou">庆科黄油体</option>
-                <option value="ZCOOL KuaiLe">站酷快乐体</option>
-                <option value="Ma Shan Zheng">马善政毛笔</option>
-                <option value="Noto Serif SC">思源宋体</option>
+                <option value="Noto Sans SC">Source Han Sans</option>
+                <option value="Smiley Sans Oblique">Smiley Sans</option>
+                <option value="ZCOOL QingKe HuangYou">ZCOOL QingKe HuangYou</option>
+                <option value="ZCOOL KuaiLe">ZCOOL KuaiLe</option>
+                <option value="Ma Shan Zheng">Ma Shan Zheng brush</option>
+                <option value="Noto Serif SC">Source Han Serif</option>
               </select></div>
-            <div class="field"><label for="tfWeight">粗细</label>
-              <select id="tfWeight" class="box"><option value="400">常规</option><option value="700">粗</option><option value="900">特粗</option></select></div>
+            <div class="field"><label for="tfWeight">Weight</label>
+              <select id="tfWeight" class="box"><option value="400">Regular</option><option value="700">Bold</option><option value="900">Black</option></select></div>
           </div>
-          <label class="rng"><span>大小</span><input type="range" min="2" max="40" step="0.5" id="tfSize"><output id="tfSizeO"></output></label>
+          <label class="rng"><span>Size</span><input type="range" min="2" max="40" step="0.5" id="tfSize"><output id="tfSizeO"></output></label>
           <div class="half" style="grid-template-columns:1fr 1fr">
-            <div class="field"><label for="tfColor">文字颜色</label><input type="color" id="tfColor" class="clr"></div>
-            <div class="field"><label for="tfStroke">描边颜色</label><input type="color" id="tfStroke" class="clr"></div>
+            <div class="field"><label for="tfColor">Text color</label><input type="color" id="tfColor" class="clr"></div>
+            <div class="field"><label for="tfStroke">Outline color</label><input type="color" id="tfStroke" class="clr"></div>
           </div>
-          <label class="rng"><span>描边粗细</span><input type="range" min="0" max="30" id="tfStrokeW"><output id="tfStrokeWO"></output></label>
-          <div class="srow"><span class="k">文字底色</span><span class="row"><input type="color" id="tfBg" class="clr sm" aria-label="底色颜色"><label class="sw"><input type="checkbox" id="tfBgOn" aria-label="显示底色"><span></span></label></span></div>
+          <label class="rng"><span>Outline width</span><input type="range" min="0" max="30" id="tfStrokeW"><output id="tfStrokeWO"></output></label>
+          <div class="srow"><span class="k">Text background</span><span class="row"><input type="color" id="tfBg" class="clr sm" aria-label="Background color"><label class="sw"><input type="checkbox" id="tfBgOn" aria-label="Show background"><span></span></label></span></div>
           <div class="row">
-            <button type="button" class="pill" id="tfCenter">水平居中</button>
-            <button type="button" class="pill" id="tfDup">复制一份</button>
+            <button type="button" class="pill" id="tfCenter">Center</button>
+            <button type="button" class="pill" id="tfDup">Duplicate</button>
             <span class="grow"></span>
-            <button type="button" class="pill danger" id="tfDel">删除这段文字</button>
+            <button type="button" class="pill danger" id="tfDel">Delete this text</button>
           </div>
         </div>
-        <p class="hint" id="edTextHint">先添加文字，或者点图上的文字来修改。</p>
+        <p class="hint" id="edTextHint">Add text first, or click text on the image to edit it.</p>
       </section>
 
       <section class="card ed-need">
-        <div class="chead"><h2>保存</h2></div>
-        <button type="button" class="btn primary" id="edSave">保存</button>
+        <div class="chead"><h2>Save</h2></div>
+        <button type="button" class="btn primary" id="edSave">Save</button>
         <div class="row">
-          <button type="button" class="btn sm" id="edSaveLib">另存到素材库</button>
-          <button type="button" class="btn sm" id="edToNote">加到当前笔记</button>
-          <button type="button" class="btn sm" id="edDownload">下载图片</button>
+          <button type="button" class="btn sm" id="edSaveLib">Save as new asset</button>
+          <button type="button" class="btn sm" id="edToNote">Add to current note</button>
+          <button type="button" class="btn sm" id="edDownload">Download image</button>
         </div>
         <p class="hint" id="edSaveHint"></p>
       </section>
@@ -318,50 +318,50 @@
 <input type="file" id="importInput" accept="application/json,.json" hidden>
 
 <div class="menu" id="addMenu" hidden>
-  <button type="button" id="addFromPc">从电脑上传</button>
-  <button type="button" id="addFromLib">从素材库选</button>
+  <button type="button" id="addFromPc">Upload from computer</button>
+  <button type="button" id="addFromLib">Choose from library</button>
 </div>
 
 <div class="modal" id="draftModal" hidden>
   <div class="mbox wide" role="dialog" aria-modal="true" aria-labelledby="dT">
-    <div class="chead"><h3 id="dT">草稿箱</h3><span class="grow"></span><button type="button" class="btn primary sm" id="newNoteBtn">新建笔记</button><button type="button" class="icobtn" data-close aria-label="关闭"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button></div>
+    <div class="chead"><h3 id="dT">Drafts</h3><span class="grow"></span><button type="button" class="btn primary sm" id="newNoteBtn">New note</button><button type="button" class="icobtn" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button></div>
     <div class="dlist" id="draftList"></div>
   </div>
 </div>
 
 <div class="modal" id="pickModal" hidden>
   <div class="mbox wide" role="dialog" aria-modal="true" aria-labelledby="pT">
-    <div class="chead"><h3 id="pT">从素材库选图片</h3><span class="grow"></span><button type="button" class="icobtn" data-close aria-label="关闭"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button></div>
+    <div class="chead"><h3 id="pT">Choose images from library</h3><span class="grow"></span><button type="button" class="icobtn" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button></div>
     <div class="pgrid" id="pickGrid"></div>
-    <div class="row" style="justify-content:flex-end"><span class="hint" id="pickInfo"></span><button type="button" class="btn primary" id="pickOk" disabled>确定</button></div>
+    <div class="row" style="justify-content:flex-end"><span class="hint" id="pickInfo"></span><button type="button" class="btn primary" id="pickOk" disabled>OK</button></div>
   </div>
 </div>
 
 <div class="modal" id="itemModal" hidden>
   <div class="mbox wide" role="dialog" aria-modal="true" aria-labelledby="iT">
-    <div class="chead"><h3 id="iT">素材</h3><span class="n" id="iMeta"></span><span class="grow"></span><button type="button" class="icobtn" data-close aria-label="关闭"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button></div>
+    <div class="chead"><h3 id="iT">Asset</h3><span class="n" id="iMeta"></span><span class="grow"></span><button type="button" class="icobtn" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button></div>
     <div class="ipv" id="iPreview"></div>
-    <div class="field"><label for="iName">名称</label><input id="iName" class="inp" type="text"></div>
-    <div class="field" id="iUrlF"><label for="iUrl">链接地址</label><div class="row"><input id="iUrl" class="inp" type="url" placeholder="https://" style="flex:1;min-width:0"><a class="btn sm" id="iOpen" target="_blank" rel="noopener">打开</a></div></div>
-    <div class="field" id="iTextF"><label for="iText">文字内容</label><textarea id="iText" class="inp" rows="8"></textarea></div>
-    <div class="field"><label for="iNote">备注</label><textarea id="iNote" class="inp" rows="2" placeholder="比如：用在哪篇笔记、谁提供的"></textarea></div>
+    <div class="field"><label for="iName">Name</label><input id="iName" class="inp" type="text"></div>
+    <div class="field" id="iUrlF"><label for="iUrl">Link URL</label><div class="row"><input id="iUrl" class="inp" type="url" placeholder="https://" style="flex:1;min-width:0"><a class="btn sm" id="iOpen" target="_blank" rel="noopener">Open</a></div></div>
+    <div class="field" id="iTextF"><label for="iText">Text content</label><textarea id="iText" class="inp" rows="8"></textarea></div>
+    <div class="field"><label for="iNote">Note</label><textarea id="iNote" class="inp" rows="2" placeholder="e.g. which note it is for, who provided it"></textarea></div>
     <div class="row">
-      <button type="button" class="btn primary sm" id="iSave">保存修改</button>
-      <button type="button" class="btn sm" id="iEdit">编辑图片</button>
-      <button type="button" class="btn sm" id="iToNote">加到当前笔记</button>
-      <button type="button" class="btn sm" id="iCopy">复制文字</button>
-      <button type="button" class="btn sm" id="iDown">下载</button>
+      <button type="button" class="btn primary sm" id="iSave">Save changes</button>
+      <button type="button" class="btn sm" id="iEdit">Edit image</button>
+      <button type="button" class="btn sm" id="iToNote">Add to current note</button>
+      <button type="button" class="btn sm" id="iCopy">Copy text</button>
+      <button type="button" class="btn sm" id="iDown">Download</button>
       <span class="grow"></span>
-      <button type="button" class="btn sm danger" id="iDel">删除</button>
+      <button type="button" class="btn sm danger" id="iDel">Delete</button>
     </div>
   </div>
 </div>
 <div class="modal" id="pubModal" hidden>
   <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mT">
-    <h3 id="mT">模拟发布完成</h3>
-    <p style="margin:0">这是模拟器，内容不会发到小红书。右侧已切换到笔记预览，可以给客户看发布后的效果。</p>
+    <h3 id="mT">Simulated publish done</h3>
+    <p style="margin:0">This is a simulator. Nothing is posted to Xiaohongshu. The preview on the right now shows the published look, ready to show a client.</p>
     <p class="hint" id="mWarn"></p>
-    <button type="button" class="btn primary" id="mClose">好的</button>
+    <button type="button" class="btn primary" id="mClose">OK</button>
   </div>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>

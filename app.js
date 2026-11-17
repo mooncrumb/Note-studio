@@ -1,20 +1,20 @@
-/* 笔记工作台：发布模拟器 + 素材库 + 图片编辑。所有内容存在浏览器的 IndexedDB 里。 */
+/* Note Studio: publish simulator + library + image editor. Everything is stored in the browser IndexedDB. */
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
-  /* ================= 通用 ================= */
+  /* ================= common ================= */
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const chars = (s) => Array.from(s || '').length;
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const pad = (n) => String(n).padStart(2, '0');
-  const fmtTime = (t) => { const d = new Date(t); return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const fmtTime = (t) => { const d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
   const fmtSize = (b) => !b ? '' : b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
   let toastT = 0;
   function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 2600); }
   function setStatus(t, cls) { const el = $('saveStatus'); el.textContent = t; el.className = 'status' + (cls ? ' ' + cls : ''); }
-  /* 需要点两次才执行的危险操作 */
+  /* dangerous actions that need two clicks */
   const armed = new WeakMap();
   function twice(btn, msg, fn) {
     if (armed.get(btn)) { clearTimeout(armed.get(btn)); armed.delete(btn); btn.classList.remove('armed'); fn(); return; }
@@ -24,7 +24,7 @@
   function blobToDataURL(blob) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); }); }
   async function dataURLToBlob(d) { const r = await fetch(d); return r.blob(); }
   function loadImage(src) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }); }
-  /* 把图片缩小成 dataURL（笔记里用） */
+  /* shrink an image to a dataURL (used in notes) */
   async function shrink(src, maxW, maxH, q) {
     const isBlob = src instanceof Blob;
     const url = isBlob ? URL.createObjectURL(src) : src;
@@ -46,7 +46,7 @@
   function openModal(id) { $(id).hidden = false; }
   function closeModal(id) { $(id).hidden = true; }
 
-  /* ================= 存储（IndexedDB） ================= */
+  /* ================= storage (IndexedDB) ================= */
   const mem = { notes: new Map(), assets: new Map(), kv: new Map() };
   const DB = {
     db: null, ok: false,
@@ -77,9 +77,9 @@
     put(s, o) { return DB.run(s, 'readwrite', (st) => { st.put(o); }); },
     del(s, id) { return DB.run(s, 'readwrite', (st) => { st.delete(id); }); }
   };
-  function saveFailed(e) { console.error(e); setStatus('保存失败：浏览器存储空间可能满了', 'warn'); }
+  function saveFailed(e) { console.error(e); setStatus('Save failed: the browser storage may be full', 'warn'); }
 
-  /* ================= 路由 ================= */
+  /* ================= router ================= */
   const PAGES = ['sim', 'lib', 'edit'];
   function route() {
     let p = (location.hash || '#sim').slice(1);
@@ -93,32 +93,32 @@
   }
   const go = (p) => { if (location.hash === '#' + p) route(); else location.hash = p; };
 
-  /* ================= 发布模拟器 ================= */
-  let N = null;            // 当前笔记
+  /* ================= publish simulator ================= */
+  let N = null;            // current note
   let A = { id: 'account', name: '', avatar: '', bio: '', fans: '0', likes: '0' };
   let view = 'detail', slide = 0;
   const MAX_IMG = 18;
   const TABS = {
-    video: { drop: '拖拽视频到此或点击上传', btn: '上传视频', specs: [['视频大小', '支持时长4小时以内，<br>最大20GB的视频文件'], ['视频格式', '支持常用视频格式，<br>推荐使用mp4、mov'], ['视频分辨率', '超过1080P的视频用网页端上传画质更清晰']] },
-    image: { drop: '拖拽图片到此或点击上传', btn: '上传图片', specs: [] },
-    article: { drop: '模拟器暂不支持写长文', btn: '切换到上传图文', specs: [] },
-    podcast: { drop: '模拟器暂不支持发播客', btn: '切换到上传图文', specs: [] }
+    video: { drop: 'Drag a video here or click to upload', btn: 'Upload video', specs: [['Video size', 'Up to 4 hours,<br>max 20GB per video'], ['Video format', 'Common video formats,<br>mp4 and mov recommended'], ['Video resolution', 'Videos over 1080P look sharper uploaded from the web']] },
+    image: { drop: 'Drag photos here or click to upload', btn: 'Upload photos', specs: [] },
+    article: { drop: 'The simulator does not support long articles yet', btn: 'Switch to image notes', specs: [] },
+    podcast: { drop: 'The simulator does not support podcasts yet', btn: 'Switch to image notes', specs: [] }
   };
-  const SUGG = ['普拉提', 'Markham普拉提', '康复训练', '多伦多生活', '万锦', '普拉提入门', '体态矫正', 'Reformer普拉提', '多伦多普拉提', '运动康复', '周年庆', '健身打卡'];
+  const SUGG = ['Pilates', 'MarkhamPilates', 'Rehab', 'TorontoLife', 'Markham', 'PilatesForBeginners', 'PostureCorrection', 'ReformerPilates', 'TorontoPilates', 'MovementRehab', 'Anniversary', 'FitnessCheckIn'];
   const EMO = ['😊', '😂', '🥰', '😍', '🤩', '😎', '🥳', '😭', '👍', '👏', '🙌', '💪', '🙏', '✨', '🔥', '🎉', '🎁', '❤️', '💛', '💙', '🌟', '📍', '📅', '✅', '👉', '💬', '🏃‍♀️', '🧘‍♀️', '🍰', '🌿', '☀️', '🍂'];
   const COMPS = [
-    ['选择群聊', 'down', '<path d="M3 4h10v6.5H8l-3 2.5v-2.5H3z"/>'],
-    ['引用笔记', 'right', '<path d="M4 3h8v10H4zM6.5 6h3M6.5 9h3"/>'],
-    ['添加投票', 'right', '<path d="M3.5 13V8M8 13V3.5M12.5 13V6"/>'],
-    ['添加小工具', 'down', '<path d="M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z"/>'],
-    ['关联直播预告', 'right', '<rect x="2.5" y="4" width="11" height="8" rx="2"/><path d="M7 6.5v3l2.5-1.5z"/>'],
-    ['标记地点或标记朋友', 'right', '<circle cx="8" cy="6" r="2.5"/><path d="M3.5 13.5c.8-2.4 2.5-3.5 4.5-3.5s3.7 1.1 4.5 3.5"/>'],
-    ['添加路线', 'right', '<path d="M4 13a1.5 1.5 0 1 0 0-.1M12 4.5a1.5 1.5 0 1 0 0-.1M4 11.5V9c0-1.5 1-2.5 2.5-2.5h3C11 6.5 12 5.5 12 4"/>'],
-    ['选择文件', 'right', '<path d="M4 2.5h5l3 3v8H4zM9 2.5v3h3"/>']
+    ['Pick a group chat', 'down', '<path d="M3 4h10v6.5H8l-3 2.5v-2.5H3z"/>'],
+    ['Quote a note', 'right', '<path d="M4 3h8v10H4zM6.5 6h3M6.5 9h3"/>'],
+    ['Add a poll', 'right', '<path d="M3.5 13V8M8 13V3.5M12.5 13V6"/>'],
+    ['Add a widget', 'down', '<path d="M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z"/>'],
+    ['Link a live preview', 'right', '<rect x="2.5" y="4" width="11" height="8" rx="2"/><path d="M7 6.5v3l2.5-1.5z"/>'],
+    ['Tag location or friends', 'right', '<circle cx="8" cy="6" r="2.5"/><path d="M3.5 13.5c.8-2.4 2.5-3.5 4.5-3.5s3.7 1.1 4.5 3.5"/>'],
+    ['Add a route', 'right', '<path d="M4 13a1.5 1.5 0 1 0 0-.1M12 4.5a1.5 1.5 0 1 0 0-.1M4 11.5V9c0-1.5 1-2.5 2.5-2.5h3C11 6.5 12 5.5 12 4"/>'],
+    ['Choose a file', 'right', '<path d="M4 2.5h5l3 3v8H4zM9 2.5v3h3"/>']
   ];
   const EVENTS = [
-    { id: 'red11', name: 'RED11月精选作者投稿', date: '11-04 至 11-25', bg: 'linear-gradient(135deg,#5B6B8C,#2F3B55)' },
-    { id: 'malu', name: '马路生活节', date: '10-23 至 11-30', bg: 'linear-gradient(135deg,#6E9A7A,#3D6250)' }
+    { id: 'red11', name: 'RED11 Featured Creator Call', date: '11-04 to 11-25', bg: 'linear-gradient(135deg,#5B6B8C,#2F3B55)' },
+    { id: 'malu', name: 'Street Life Festival', date: '10-23 to 11-30', bg: 'linear-gradient(135deg,#6E9A7A,#3D6250)' }
   ];
   const TAG_RE = /#([^\s#@，。！？、,.!?;；:：（）()【】]+)/g;
   function topicsOf(s) { const out = []; let m; TAG_RE.lastIndex = 0; while ((m = TAG_RE.exec(s || ''))) { if (out.indexOf(m[1]) < 0) out.push(m[1]); } return out; }
@@ -159,7 +159,7 @@
 
   let saveT = 0;
   function scheduleSave() {
-    setStatus('正在保存...');
+    setStatus('Saving...');
     clearTimeout(saveT);
     saveT = setTimeout(saveNow, 500);
   }
@@ -170,13 +170,13 @@
       await DB.put('notes', N);
       await DB.put('kv', A);
       await DB.put('kv', { id: 'current', noteId: N.id });
-      setStatus(DB.ok ? '已自动保存 ' + pad(new Date().getHours()) + ':' + pad(new Date().getMinutes()) : '这个浏览器不能长期保存，关掉页面前请导出备份', DB.ok ? 'ok' : 'warn');
+      setStatus(DB.ok ? 'Auto-saved ' + pad(new Date().getHours()) + ':' + pad(new Date().getMinutes()) : 'This browser can’t store long-term. Export a backup before closing the page', DB.ok ? 'ok' : 'warn');
       updateDraftCount();
     } catch (e) { saveFailed(e); }
   }
   async function updateDraftCount() {
     const all = await DB.all('notes');
-    $('draftsBtn').lastChild.textContent = '草稿箱(' + all.length + ')';
+    $('draftsBtn').lastChild.textContent = 'Drafts (' + all.length + ')';
   }
 
   function renderScreen() {
@@ -202,17 +202,17 @@
   function renderAccount() {
     const bg = A.avatar ? 'url(' + A.avatar + ')' : '';
     $('topAv').style.backgroundImage = bg; $('accAv').style.backgroundImage = bg;
-    $('topName').textContent = A.name || '账号名称';
+    $('topName').textContent = A.name || 'Account name';
   }
   function renderSide() {
-    $('origTxt').textContent = N.original ? '已声明原创' : '声明原创';
+    $('origTxt').textContent = N.original ? 'Marked original' : 'Claim original';
     $('locBox').classList.toggle('has', !!N.location.trim());
   }
   function counts() {
     const t = chars(N.title), b = chars(N.body), n = topicsOf(N.body).length;
     $('titleCount').textContent = t + '/20'; $('titleCount').className = 'cnt' + (t > 20 ? ' over' : '');
     $('bodyCount').textContent = b + '/1000'; $('bodyCount').className = 'cnt' + (b > 1000 ? ' over' : '');
-    $('topicCount').textContent = n ? n + '/10 话题' : ''; $('topicCount').className = 'cnt' + (n > 10 ? ' over' : '');
+    $('topicCount').textContent = n ? n + '/10 Topic' : ''; $('topicCount').className = 'cnt' + (n > 10 ? ' over' : '');
   }
   function renderSugg() {
     const used = topicsOf(N.body), box = $('sugg'); box.innerHTML = '';
@@ -220,24 +220,24 @@
       const b = document.createElement('button'); b.type = 'button'; b.className = 'tchip' + (used.indexOf(t) >= 0 ? ' used' : '');
       b.textContent = '#' + t; b.onclick = () => addTag(t); box.appendChild(b);
     });
-    const m = document.createElement('button'); m.type = 'button'; m.className = 'fold'; m.innerHTML = '更多 ' + ico.down;
+    const m = document.createElement('button'); m.type = 'button'; m.className = 'fold'; m.innerHTML = 'More ' + ico.down;
     m.onclick = (e) => { e.stopPropagation(); openTagPop(); }; box.appendChild(m);
   }
   function renderImgs() {
     const box = $('imgs'); box.innerHTML = '';
     if (N.images.length < MAX_IMG) {
-      const a = document.createElement('button'); a.type = 'button'; a.className = 'add'; a.setAttribute('aria-label', '添加图片');
-      a.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 6v16M6 14h16"/></svg>' + (N.images.length ? '' : '<span style="font-size:12px">添加图片</span>');
+      const a = document.createElement('button'); a.type = 'button'; a.className = 'add'; a.setAttribute('aria-label', 'Add photo');
+      a.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 6v16M6 14h16"/></svg>' + (N.images.length ? '' : '<span style="font-size:12px">Add photo</span>');
       a.onclick = (e) => { e.stopPropagation(); openAddMenu(a); };
       box.appendChild(a);
     }
     N.images.forEach((src, i) => {
       const t = document.createElement('div'); t.className = 'tile';
-      t.innerHTML = '<img alt="第 ' + (i + 1) + ' 张图片" src="' + src + '">' + (i === 0 ? '<span class="cov">封面</span>' : '') +
-        '<div class="ctl"><button type="button" aria-label="左移" title="左移">' + ico.left + '</button><button type="button" aria-label="编辑图片" title="编辑图片">' + ico.pen + '</button><button type="button" aria-label="删除" title="删除">' + ico.x + '</button><button type="button" aria-label="右移" title="右移">' + ico.right + '</button></div>';
+      t.innerHTML = '<img alt="Photo ' + (i + 1) + '  photo" src="' + src + '">' + (i === 0 ? '<span class="cov">Cover</span>' : '') +
+        '<div class="ctl"><button type="button" aria-label="Move left" title="Move left">' + ico.left + '</button><button type="button" aria-label="Edit image" title="Edit image">' + ico.pen + '</button><button type="button" aria-label="Delete" title="Delete">' + ico.x + '</button><button type="button" aria-label="Move right" title="Move right">' + ico.right + '</button></div>';
       const b = t.querySelectorAll('button');
       b[0].onclick = () => move(i, -1);
-      b[1].onclick = () => edOpen({ src, name: '笔记图片 ' + (i + 1), origin: { type: 'note', noteId: N.id, index: i } });
+      b[1].onclick = () => edOpen({ src, name: 'Note photo ' + (i + 1), origin: { type: 'note', noteId: N.id, index: i } });
       b[2].onclick = () => { N.images.splice(i, 1); slide = Math.min(slide, Math.max(0, N.images.length - 1)); changed(true); };
       b[3].onclick = () => move(i, 1);
       box.appendChild(t);
@@ -250,7 +250,7 @@
     COMPS.forEach((c) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'box comp'; b.dataset.comp = '1';
       b.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' + c[2] + '</svg><span class="grow">' + c[0] + '</span>' + (c[1] === 'down' ? ico.down : ico.chev);
-      b.onclick = () => toast('模拟器不支持「' + c[0] + '」，只显示位置');
+      b.onclick = () => toast('The simulator does not support 「' + c[0] + '」，, it only shows the slot');
       box.appendChild(b);
     });
   }
@@ -259,7 +259,7 @@
     EVENTS.forEach((ev) => {
       const on = !!N.events[ev.id], d = document.createElement('div'); d.className = 'ev';
       d.innerHTML = '<span class="th" style="background:' + ev.bg + '">' + ico.flag + '</span><span class="grow"><b>' + esc(ev.name) + '</b><small>' + esc(ev.date) + '</small></span>' +
-        '<button type="button" class="evbtn" aria-pressed="' + on + '">' + (on ? '已关联' : '关联') + '</button>';
+        '<button type="button" class="evbtn" aria-pressed="' + on + '">' + (on ? 'Linked' : 'Link') + '</button>';
       d.querySelector('button').onclick = () => { N.events[ev.id] = !N.events[ev.id]; renderEvents(); changed(); };
       box.appendChild(d);
     });
@@ -275,8 +275,8 @@
     ta.focus(); ta.setSelectionRange(p + str.length, p + str.length); ta.dataset.touched = '1'; changed();
   }
   function addTag(t) {
-    if (topicsOf(N.body).indexOf(t) >= 0) { toast('正文里已经有 #' + t); return; }
-    if (topicsOf(N.body).length >= 10) { toast('最多 10 个话题'); return; }
+    if (topicsOf(N.body).indexOf(t) >= 0) { toast('Your text already has #' + t); return; }
+    if (topicsOf(N.body).length >= 10) { toast('Up to 10 topics'); return; }
     const ta = $('body'), p = ta.selectionStart == null ? ta.value.length : ta.selectionStart;
     const before = ta.dataset.touched ? ta.value.slice(0, p) : ta.value;
     insertText((before && !/\s$/.test(before) ? ' ' : '') + '#' + t + ' ');
@@ -284,7 +284,7 @@
   function closePops() { $('emoPop').hidden = true; $('tagPop').hidden = true; }
   function openTagPop() {
     const pop = $('tagPop'), used = topicsOf(N.body);
-    pop.innerHTML = '<input class="inp" id="tagNew" type="text" placeholder="输入话题，按 Enter 添加" style="margin-bottom:6px">' +
+    pop.innerHTML = '<input class="inp" id="tagNew" type="text" placeholder="Type a topic and press Enter" style="margin-bottom:6px">' +
       SUGG.filter((t) => used.indexOf(t) < 0).map((t) => '<button type="button" data-t="' + esc(t) + '">#' + esc(t) + '</button>').join('');
     $$('[data-t]', pop).forEach((b) => { b.onclick = () => { addTag(b.dataset.t); closePops(); }; });
     const inp = pop.querySelector('#tagNew');
@@ -293,9 +293,9 @@
   }
   async function addImageFiles(list) {
     const files = Array.from(list || []).filter((f) => /^image\//.test(f.type)).slice(0, MAX_IMG - N.images.length);
-    if (!files.length) { toast('请选择图片文件'); return; }
-    setStatus('正在处理图片...');
-    for (const f of files) { try { N.images.push(await shrink(f, 1080, 1440)); } catch (e) { toast('有一张图片读不出来，已跳过'); } }
+    if (!files.length) { toast('Please choose image files'); return; }
+    setStatus('Processing photos...');
+    for (const f of files) { try { N.images.push(await shrink(f, 1080, 1440)); } catch (e) { toast('One photo could not be read and was skipped'); } }
     N.tab = 'image'; changed(true);
   }
   function openAddMenu(anchor) {
@@ -304,20 +304,20 @@
     m.hidden = false;
   }
 
-  /* 草稿箱 */
+  /* Drafts */
   async function openDrafts() {
     const all = (await DB.all('notes')).sort((a, b) => b.updatedAt - a.updatedAt);
     const box = $('draftList'); box.innerHTML = '';
-    if (!all.length) box.innerHTML = '<p class="hint">还没有笔记。</p>';
+    if (!all.length) box.innerHTML = '<p class="hint">No notes yet.</p>';
     all.forEach((n) => {
       const d = document.createElement('div'); d.className = 'drow' + (n.id === N.id ? ' cur' : '');
       d.innerHTML = '<span class="th"' + (n.images[0] ? ' style="background-image:url(' + n.images[0] + ')"' : '') + '></span>' +
-        '<span class="grow"><b>' + esc(n.title || '无标题笔记') + (n.published ? '<span class="stag">已模拟发布</span>' : '') + (n.id === N.id ? '<span class="stag">正在编辑</span>' : '') + '</b>' +
-        '<small>' + n.images.length + ' 张图 · 改于 ' + fmtTime(n.updatedAt) + '</small></span>' +
-        '<button type="button" class="btn sm">打开</button><button type="button" class="pill danger">删除</button>';
+        '<span class="grow"><b>' + esc(n.title || 'Untitled note') + (n.published ? '<span class="stag">Simulated publish</span>' : '') + (n.id === N.id ? '<span class="stag">editing</span>' : '') + '</b>' +
+        '<small>' + n.images.length + '  photos · edited ' + fmtTime(n.updatedAt) + '</small></span>' +
+        '<button type="button" class="btn sm">Open</button><button type="button" class="pill danger">Delete</button>';
       const [openB, delB] = d.querySelectorAll('button');
-      openB.onclick = async () => { await saveNow(); N = normalizeNote(n); await DB.put('kv', { id: 'current', noteId: N.id }); loadNoteIntoUI(); closeModal('draftModal'); toast('已打开'); };
-      delB.onclick = () => twice(delB, '再点一次删除这篇笔记', async () => {
+      openB.onclick = async () => { await saveNow(); N = normalizeNote(n); await DB.put('kv', { id: 'current', noteId: N.id }); loadNoteIntoUI(); closeModal('draftModal'); toast('Opened'); };
+      delB.onclick = () => twice(delB, 'Tap again to delete this note', async () => {
         await DB.del('notes', n.id);
         if (n.id === N.id) {
           const rest = (await DB.all('notes')).sort((a, b) => b.updatedAt - a.updatedAt);
@@ -331,35 +331,35 @@
     openModal('draftModal');
   }
 
-  /* 手机预览 */
+  /* phone preview */
   const avStyle = () => A.avatar ? ' style="background-image:url(' + A.avatar + ')"' : '';
   const richText = (s) => esc(s).replace(/(^|[^\w&])([#@][^\s#@，。！？、,.!?;；:：（）()【】<]+)/g, (m, a, b) => a + '<span class="lk">' + b + '</span>');
   function whenText() {
     if (N.schedOn && N.schedAt) { const d = new Date(N.schedAt); if (!isNaN(d)) return (d.getMonth() + 1) + '-' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
-    return '刚刚';
+    return 'just now';
   }
   function metaLine() {
-    const bits = ['<span>编辑于 ' + whenText() + '</span>'];
+    const bits = ['<span>Edited ' + whenText() + '</span>'];
     if (N.location.trim()) bits.push('<span>' + ico.pin + esc(N.location.trim()) + '</span>');
-    if (N.visibility === 'private') bits.push('<span>' + ico.lock + '仅自己可见</span>');
+    if (N.visibility === 'private') bits.push('<span>' + ico.lock + 'Private</span>');
     return bits.join('');
   }
-  const bottomNav = (cur) => '<div class="hbot"><span class="' + (cur === 'home' ? 'on' : '') + '">首页</span><span>市集</span><span class="plus">+</span><span>消息</span><span class="' + (cur === 'me' ? 'on' : '') + '">我</span></div>';
+  const bottomNav = (cur) => '<div class="hbot"><span class="' + (cur === 'home' ? 'on' : '') + '">Home</span><span>Shop</span><span class="plus">+</span><span>Inbox</span><span class="' + (cur === 'me' ? 'on' : '') + '">Me</span></div>';
   function noteCard(withLock) {
-    const cover = N.images[0] ? '<img alt="封面" src="' + N.images[0] + '">' : '上传图片后显示封面';
-    const lock = withLock && N.visibility === 'private' ? '<span class="lockb">' + ico.lock + '仅自己可见</span>' : '';
-    return '<div class="fcard"><div class="fimg">' + cover + lock + '</div><div class="ft">' + esc(N.title || '标题') + '</div>' +
-      '<div class="fu"><span class="av"' + avStyle() + '></span><span class="nm">' + esc(A.name || '账号名称') + '</span>' + ico.heart + '<span>赞</span></div></div>';
+    const cover = N.images[0] ? '<img alt="Cover" src="' + N.images[0] + '">' : 'Cover appears after you add photos';
+    const lock = withLock && N.visibility === 'private' ? '<span class="lockb">' + ico.lock + 'Private</span>' : '';
+    return '<div class="fcard"><div class="fimg">' + cover + lock + '</div><div class="ft">' + esc(N.title || 'Title') + '</div>' +
+      '<div class="fu"><span class="av"' + avStyle() + '></span><span class="nm">' + esc(A.name || 'Account name') + '</span>' + ico.heart + '<span>Like</span></div></div>';
   }
   function renderPreview() {
     $$('.seg [data-view]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === view));
-    const sc = $('screen'), name = esc(A.name || '账号名称');
+    const sc = $('screen'), name = esc(A.name || 'Account name');
     if (view === 'home') {
       const first = N.visibility === 'private'
-        ? '<div class="privnote">这篇设为仅自己可见，不会出现在别人的首页</div>'
+        ? '<div class="privnote">This note is private and won’t show in anyone else’s feed</div>'
         : '<div class="fcol">' + noteCard(false) + '<div class="skel b"></div></div><div class="fcol"><div class="skel a"></div><div class="skel b"></div></div>';
-      sc.innerHTML = '<div class="hwrap"><div class="htop">' + ico.menu + '<div class="htabs"><span>关注</span><span class="on">发现</span><span>本地</span></div>' + ico.search + '</div>' +
-        '<div class="hchan"><span class="on">推荐</span><span>运动健身</span><span>美食</span><span>穿搭</span><span>旅行</span><span>健康</span></div>' +
+      sc.innerHTML = '<div class="hwrap"><div class="htop">' + ico.menu + '<div class="htabs"><span>Follow</span><span class="on">Discover</span><span>Local</span></div>' + ico.search + '</div>' +
+        '<div class="hchan"><span class="on">For You</span><span>Fitness</span><span>Food</span><span>Fashion</span><span>Travel</span><span>Health</span></div>' +
         '<div class="feed">' + first + '</div>' + bottomNav('home') + '</div>';
       const fc = sc.querySelector('.fcard'); if (fc) fc.onclick = () => { view = 'detail'; renderPreview(); };
       return;
@@ -367,25 +367,25 @@
     if (view === 'profile') {
       sc.innerHTML = '<div class="pwrap"><div class="dscroll"><div class="phead"><div class="who"><span class="av"' + avStyle() + '></span><b>' + name + '</b></div>' +
         (A.bio ? '<div class="pbio">' + esc(A.bio) + '</div>' : '') +
-        '<div class="pstats"><span><b>' + esc(A.fans || '0') + '</b>粉丝</span><span><b>' + esc(A.likes || '0') + '</b>获赞与收藏</span><span class="pedit">编辑资料</span></div></div>' +
-        '<div class="ptabs"><span class="on">笔记</span><span>收藏</span><span>赞过</span></div>' +
+        '<div class="pstats"><span><b>' + esc(A.fans || '0') + '</b>Followers</span><span><b>' + esc(A.likes || '0') + '</b>Likes & saves</span><span class="pedit">Edit profile</span></div></div>' +
+        '<div class="ptabs"><span class="on">Notes</span><span>Save</span><span>Liked</span></div>' +
         '<div class="feed"><div class="fcol">' + noteCard(true) + '<div class="skel b"></div></div><div class="fcol"><div class="skel a"></div></div></div></div>' +
         bottomNav('me') + '</div>';
       sc.querySelector('.fcard').onclick = () => { view = 'detail'; renderPreview(); };
       return;
     }
     const n = N.images.length; slide = Math.min(slide, Math.max(0, n - 1));
-    const media = n ? '<img alt="第 ' + (slide + 1) + ' 张" src="' + N.images[slide] + '">' +
-      (n > 1 ? '<button type="button" class="mnav prev" aria-label="上一张">' + ico.left + '</button><button type="button" class="mnav next" aria-label="下一张">' + ico.right + '</button><span class="num">' + (slide + 1) + '/' + n + '</span>' : '')
-      : '上传图片后显示';
+    const media = n ? '<img alt="Photo ' + (slide + 1) + ' " src="' + N.images[slide] + '">' +
+      (n > 1 ? '<button type="button" class="mnav prev" aria-label="Previous">' + ico.left + '</button><button type="button" class="mnav next" aria-label="Next">' + ico.right + '</button><span class="num">' + (slide + 1) + '/' + n + '</span>' : '')
+      : 'Appears after you add photos';
     let dots = ''; for (let i = 0; i < n && n > 1; i++) dots += '<i class="' + (i === slide ? 'on' : '') + '"></i>';
-    sc.innerHTML = '<div class="det"><div class="dhead">' + ico.back + '<span class="av big"' + avStyle() + '></span><span class="nm">' + name + '</span><span class="follow">关注</span>' + ico.share + '</div>' +
+    sc.innerHTML = '<div class="det"><div class="dhead">' + ico.back + '<span class="av big"' + avStyle() + '></span><span class="nm">' + name + '</span><span class="follow">Follow</span>' + ico.share + '</div>' +
       '<div class="dscroll"><div class="media">' + media + '</div>' + (dots ? '<div class="dots">' + dots + '</div>' : '') +
       '<div class="dbody">' + (N.title ? '<h3>' + esc(N.title) + '</h3>' : '') + '<div class="dtext">' + richText(N.body) + '</div>' +
       '<div class="dmeta">' + metaLine() + '</div>' +
       (N.statement ? '<div class="dai">' + ico.info + esc(N.statement) + '</div>' : '') +
-      '</div><div class="dcm"><span class="c">共 0 条评论</span><div class="me"><span class="av big"' + avStyle() + '></span><span>说点什么，让 TA 也认识看笔记的你</span></div><div class="empty">这是一片荒草地，点击评论</div></div></div>' +
-      '<div class="dbar"><span class="say">说点什么...</span><span>' + ico.heart + '赞</span><span>' + ico.star + '收藏</span><span>' + ico.chat + '评论</span></div></div>';
+      '</div><div class="dcm"><span class="c">0 comments</span><div class="me"><span class="av big"' + avStyle() + '></span><span>Say something nice to the author</span></div><div class="empty">Nothing here yet. Tap to comment</div></div></div>' +
+      '<div class="dbar"><span class="say">Say something...</span><span>' + ico.heart + 'Like</span><span>' + ico.star + 'Save</span><span>' + ico.chat + 'Comment</span></div></div>';
     const p = sc.querySelector('.prev'), q = sc.querySelector('.next');
     if (p) p.onclick = () => { slide = (slide - 1 + n) % n; renderPreview(); };
     if (q) q.onclick = () => { slide = (slide + 1) % n; renderPreview(); };
@@ -393,18 +393,18 @@
 
   function bindSim() {
     $$('.tab').forEach((t) => { t.onclick = () => { N.tab = t.dataset.tab; renderScreen(); scheduleSave(); }; });
-    $$('[data-off]').forEach((b) => { b.onclick = () => toast('模拟器只开放发布笔记'); });
+    $$('[data-off]').forEach((b) => { b.onclick = () => toast('The simulator only opens the publish-note screen'); });
     $$('[data-toast]').forEach((b) => { b.onclick = () => toast(b.dataset.toast); });
     $$('[data-fold]').forEach((b) => {
-      b.onclick = () => { const c = $(b.dataset.fold), closed = c.classList.toggle('closed'); b.setAttribute('aria-expanded', !closed); b.querySelector('span').textContent = closed ? '展开' : '收起'; };
+      b.onclick = () => { const c = $(b.dataset.fold), closed = c.classList.toggle('closed'); b.setAttribute('aria-expanded', !closed); b.querySelector('span').textContent = closed ? 'Expand' : 'Collapse'; };
     });
     $('draftsBtn').onclick = openDrafts;
-    $('newNoteBtn').onclick = async () => { await saveNow(); N = blankNote(); loadNoteIntoUI(); await saveNow(); closeModal('draftModal'); toast('新建了一篇笔记'); };
+    $('newNoteBtn').onclick = async () => { await saveNow(); N = blankNote(); loadNoteIntoUI(); await saveNow(); closeModal('draftModal'); toast('Created a new note'); };
     $('sideClose').onclick = () => { document.body.classList.add('side-off'); $('sideOpen').hidden = false; };
     $('sideOpen').onclick = () => { document.body.classList.remove('side-off'); $('sideOpen').hidden = true; };
     $('upBtn').onclick = () => {
       if (N.tab === 'image') $('imgInput').click();
-      else if (N.tab === 'video') toast('模拟器只支持图文，视频不能上传');
+      else if (N.tab === 'video') toast('The simulator only supports image notes. Videos can’t be uploaded');
       else { N.tab = 'image'; renderScreen(); scheduleSave(); }
     };
     const sec = $('imgSec');
@@ -414,16 +414,16 @@
     const drop = $('drop');
     drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); };
     drop.ondragleave = () => drop.classList.remove('over');
-    drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); if (N.tab !== 'image') { toast('切到上传图文再拖图片'); return; } addImageFiles(e.dataTransfer.files); };
+    drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); if (N.tab !== 'image') { toast('Switch to image notes, then drag photos in'); return; } addImageFiles(e.dataTransfer.files); };
     $('imgInput').onchange = function () { const f = this.files; addImageFiles(f).then(() => { this.value = ''; }); };
     $('addFromPc').onclick = () => { $('addMenu').hidden = true; $('imgInput').click(); };
     $('addFromLib').onclick = () => { $('addMenu').hidden = true; openPicker(true, async (ids) => {
       for (const id of ids.slice(0, MAX_IMG - N.images.length)) { const a = await DB.get('assets', id); if (a && a.blob) N.images.push(await shrink(a.blob, 1080, 1440)); }
-      changed(true); toast('已加到笔记');
+      changed(true); toast('Added to the note');
     }); };
-    $('clearImgs').onclick = function () { if (!N.images.length) return; twice(this, '再点一次清空全部图片', () => { N.images = []; slide = 0; changed(true); }); };
-    $('coverTip').onclick = () => toast('第一张图就是封面，可以拖动顺序调整');
-    $('smartTitle').onclick = () => toast('模拟器没有智能标题');
+    $('clearImgs').onclick = function () { if (!N.images.length) return; twice(this, 'Tap again to clear all photos', () => { N.images = []; slide = 0; changed(true); }); };
+    $('coverTip').onclick = () => toast('The first photo is the cover. Drag to reorder.');
+    $('smartTitle').onclick = () => toast('The simulator has no smart-title feature');
     $('title').oninput = function () { N.title = this.value; changed(); };
     const ta = $('body');
     ta.oninput = function () { N.body = this.value; changed(); };
@@ -445,20 +445,20 @@
     $$('[data-view]').forEach((b) => { b.onclick = () => { view = b.dataset.view; renderPreview(); }; });
     $('pubBtn').onclick = async () => {
       const w = [];
-      if (chars(N.title) > 20) w.push('标题超过 20 字');
-      if (chars(N.body) > 1000) w.push('正文超过 1000 字');
-      if (!N.images.length) w.push('还没有上传图片');
-      if (topicsOf(N.body).length > 10) w.push('话题超过 10 个');
-      $('mWarn').textContent = w.length ? '提醒：' + w.join('，') + '。' : '';
+      if (chars(N.title) > 20) w.push('Title over 20 characters');
+      if (chars(N.body) > 1000) w.push('Body over 1000 characters');
+      if (!N.images.length) w.push('No photos uploaded yet');
+      if (topicsOf(N.body).length > 10) w.push('More than 10 topics');
+      $('mWarn').textContent = w.length ? 'Note: ' + w.join('，') + '。' : '';
       N.published = true; N.publishedAt = Date.now(); await saveNow();
       view = 'detail'; slide = 0; renderPreview();
       openModal('pubModal'); $('mClose').focus();
     };
     $('mClose').onclick = () => closeModal('pubModal');
-    $('saveBtn').onclick = async () => { await saveNow(); toast('已存进草稿箱'); };
+    $('saveBtn').onclick = async () => { await saveNow(); toast('Saved to drafts'); };
   }
 
-  /* 账号 + 备份弹层 */
+  /* account + backup popover */
   function bindTop() {
     const pops = [['acctBtn', 'acctPop'], ['backupBtn', 'backupPop']];
     pops.forEach(([b, p]) => {
@@ -496,21 +496,21 @@
   }
   async function showStorage() {
     const el = $('storageInfo');
-    if (!DB.ok) { el.textContent = '这个浏览器（可能是无痕模式）不能长期保存，关掉页面前请先导出。'; return; }
+    if (!DB.ok) { el.textContent = 'This browser (possibly private mode) can’t store long-term. Export before closing the page.'; return; }
     try {
       const est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
-      el.textContent = est ? '已用 ' + fmtSize(est.usage) + '，可用约 ' + fmtSize(est.quota) : '';
+      el.textContent = est ? 'Used ' + fmtSize(est.usage) + '，, about ' + fmtSize(est.quota) : '';
     } catch (e) { el.textContent = ''; }
   }
   async function exportAll() {
-    setStatus('正在导出...');
+    setStatus('Exporting...');
     const notes = await DB.all('notes'), kv = await DB.all('kv'), assets = await DB.all('assets');
     const out = [];
     for (const a of assets) { const c = Object.assign({}, a); if (a.blob) { c.blob = undefined; c.dataUrl = await blobToDataURL(a.blob); } out.push(c); }
     const data = { app: 'note-studio', version: 1, exportedAt: Date.now(), notes, kv, assets: out };
     const d = new Date();
-    download(new Blob([JSON.stringify(data)], { type: 'application/json' }), '笔记工作台备份-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json');
-    setStatus('已导出备份', 'ok');
+    download(new Blob([JSON.stringify(data)], { type: 'application/json' }), 'note-studio-backup-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json');
+    setStatus('Backup exported', 'ok');
   }
   async function importAll(file) {
     try {
@@ -520,14 +520,14 @@
       for (const a of data.assets || []) { if (a.dataUrl) { a.blob = await dataURLToBlob(a.dataUrl); delete a.dataUrl; } await DB.put('assets', a); }
       for (const k of data.kv || []) await DB.put('kv', k);
       await boot(true);
-      toast('导入完成');
-    } catch (e) { console.error(e); toast('这个文件不是笔记工作台的备份'); }
+      toast('Import complete');
+    } catch (e) { console.error(e); toast('This file is not a Note Studio backup'); }
   }
 
-  /* ================= 素材库 ================= */
+  /* ================= library ================= */
   let libFilter = 'all', libQuery = '', libURLs = [], curItem = null;
   const extOf = (name) => { const m = /\.([a-z0-9]{1,5})$/i.exec(name || ''); return m ? m[1].toUpperCase() : 'FILE'; };
-  const KIND = { image: '图片', file: '文件', text: '文字', link: '链接' };
+  const KIND = { image: 'Images', file: 'Files', text: 'Text', link: 'Links' };
   async function renderLib() {
     libURLs.forEach((u) => URL.revokeObjectURL(u)); libURLs = [];
     let all = (await DB.all('assets')).sort((a, b) => b.updatedAt - a.updatedAt);
@@ -536,16 +536,16 @@
     if (libQuery) { const q = libQuery.toLowerCase(); all = all.filter((a) => [a.name, a.note, a.text, a.url].join(' ').toLowerCase().indexOf(q) >= 0); }
     const g = $('libGrid'); g.innerHTML = '';
     $('libEmpty').hidden = total > 0;
-    if (total && !all.length) g.innerHTML = '<p class="hint">没有符合条件的素材。</p>';
+    if (total && !all.length) g.innerHTML = '<p class="hint">No matching assets.</p>';
     all.forEach((a) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'lcard';
       let th;
       if (a.kind === 'image' && a.blob) { const u = URL.createObjectURL(a.blob); libURLs.push(u); th = '<img alt="" loading="lazy" src="' + u + '">'; }
-      else if (a.kind === 'text') th = '<span class="snip">' + esc((a.text || '').slice(0, 220) || '（空白）') + '</span>';
+      else if (a.kind === 'text') th = '<span class="snip">' + esc((a.text || '').slice(0, 220) || '（empty)') + '</span>';
       else if (a.kind === 'link') th = '<span class="ext">LINK</span>';
       else th = '<span class="ext">' + esc(extOf(a.name)) + '</span>';
-      const sub = a.kind === 'link' ? (a.url || '还没填链接') : a.note || (fmtTime(a.updatedAt) + (a.size ? ' · ' + fmtSize(a.size) : ''));
-      b.innerHTML = '<span class="lthumb">' + th + '<span class="kind">' + KIND[a.kind] + '</span></span><span class="lmeta"><b>' + esc(a.name || '未命名') + '</b><small>' + esc(sub) + '</small></span>';
+      const sub = a.kind === 'link' ? (a.url || 'No link yet') : a.note || (fmtTime(a.updatedAt) + (a.size ? ' · ' + fmtSize(a.size) : ''));
+      b.innerHTML = '<span class="lthumb">' + th + '<span class="kind">' + KIND[a.kind] + '</span></span><span class="lmeta"><b>' + esc(a.name || 'Untitled') + '</b><small>' + esc(sub) + '</small></span>';
       b.onclick = () => openItem(a.id);
       g.appendChild(b);
     });
@@ -554,16 +554,16 @@
     const files = Array.from(list || []);
     const vids = files.filter((f) => /^video\//.test(f.type));
     const ok = files.filter((f) => !/^video\//.test(f.type));
-    if (vids.length) toast('视频不支持上传，已跳过 ' + vids.length + ' 个');
+    if (vids.length) toast('Videos not supported, skipped ' + vids.length + ' ');
     if (!ok.length) return [];
-    setStatus('正在上传...');
+    setStatus('Uploading...');
     const ids = [];
     for (const f of ok) {
       const t = Date.now();
       const a = { id: uid(), kind: /^image\//.test(f.type) ? 'image' : 'file', name: f.name, mime: f.type || 'application/octet-stream', size: f.size, blob: f.slice(0, f.size, f.type), note: '', createdAt: t, updatedAt: t };
       try { await DB.put('assets', a); ids.push(a.id); } catch (e) { saveFailed(e); return ids; }
     }
-    setStatus('已上传 ' + ids.length + ' 个', 'ok');
+    setStatus('Uploaded ' + ids.length + ' ', 'ok');
     renderLib();
     return ids;
   }
@@ -571,7 +571,7 @@
     const a = await DB.get('assets', id); if (!a) return;
     curItem = a;
     $('iT').textContent = KIND[a.kind];
-    $('iMeta').textContent = '改于 ' + fmtTime(a.updatedAt) + (a.size ? ' · ' + fmtSize(a.size) : '');
+    $('iMeta').textContent = 'edited ' + fmtTime(a.updatedAt) + (a.size ? ' · ' + fmtSize(a.size) : '');
     $('iName').value = a.name || ''; $('iNote').value = a.note || '';
     $('iUrlF').hidden = a.kind !== 'link'; $('iUrl').value = a.url || ''; $('iOpen').href = a.url || '#';
     $('iTextF').hidden = a.kind !== 'text'; $('iText').value = a.text || '';
@@ -581,7 +581,7 @@
     if (a.blob) {
       const u = URL.createObjectURL(a.blob); libURLs.push(u);
       if (a.kind === 'image') pv.innerHTML = '<img alt="" src="' + u + '">';
-      else if (/pdf/.test(a.mime)) pv.innerHTML = '<iframe title="PDF 预览" src="' + u + '"></iframe>';
+      else if (/pdf/.test(a.mime)) pv.innerHTML = '<iframe title="PDF Preview" src="' + u + '"></iframe>';
       else pv.innerHTML = '<span class="ext">' + esc(extOf(a.name)) + '</span>';
     }
     openModal('itemModal');
@@ -590,8 +590,8 @@
   function bindLib() {
     $('libUpload').onclick = () => $('libInput').click();
     $('libInput').onchange = function () { const f = this.files; addLibFiles(f).then(() => { this.value = ''; }); };
-    $('libText').onclick = async () => { const t = Date.now(); const a = { id: uid(), kind: 'text', name: '新文字 ' + fmtTime(t), text: '', note: '', createdAt: t, updatedAt: t }; await DB.put('assets', a); renderLib(); openItem(a.id); };
-    $('libLink').onclick = async () => { const t = Date.now(); const a = { id: uid(), kind: 'link', name: '新链接', url: '', note: '', createdAt: t, updatedAt: t }; await DB.put('assets', a); renderLib(); openItem(a.id); setTimeout(() => $('iUrl').focus(), 50); };
+    $('libText').onclick = async () => { const t = Date.now(); const a = { id: uid(), kind: 'text', name: 'New text ' + fmtTime(t), text: '', note: '', createdAt: t, updatedAt: t }; await DB.put('assets', a); renderLib(); openItem(a.id); };
+    $('libLink').onclick = async () => { const t = Date.now(); const a = { id: uid(), kind: 'link', name: 'New link', url: '', note: '', createdAt: t, updatedAt: t }; await DB.put('assets', a); renderLib(); openItem(a.id); setTimeout(() => $('iUrl').focus(), 50); };
     $$('#libFilter button').forEach((b) => { b.onclick = () => { libFilter = b.dataset.f; $$('#libFilter button').forEach((x) => x.setAttribute('aria-pressed', x === b)); renderLib(); }; });
     $('libSearch').oninput = function () { libQuery = this.value.trim(); renderLib(); };
     const w = $('libDrop');
@@ -603,26 +603,26 @@
       const a = curItem; if (!a) return;
       a.name = $('iName').value.trim(); a.note = $('iNote').value;
       if (a.kind === 'text') a.text = $('iText').value;
-      if (a.kind === 'link') { let u = $('iUrl').value.trim(); if (u && !/^[a-z]+:/i.test(u)) u = 'https://' + u; a.url = u; if (!a.name || a.name === '新链接') { try { a.name = new URL(u).hostname; } catch (e) { } } }
+      if (a.kind === 'link') { let u = $('iUrl').value.trim(); if (u && !/^[a-z]+:/i.test(u)) u = 'https://' + u; a.url = u; if (!a.name || a.name === 'New link') { try { a.name = new URL(u).hostname; } catch (e) { } } }
       a.updatedAt = Date.now();
-      try { await DB.put('assets', a); closeModal('itemModal'); renderLib(); toast('已保存'); } catch (e) { saveFailed(e); }
+      try { await DB.put('assets', a); closeModal('itemModal'); renderLib(); toast('Saved'); } catch (e) { saveFailed(e); }
     };
-    $('iDel').onclick = function () { twice(this, '再点一次删除', async () => { await DB.del('assets', curItem.id); closeModal('itemModal'); renderLib(); toast('已删除'); }); };
-    $('iDown').onclick = () => { if (curItem && curItem.blob) download(curItem.blob, curItem.name || ('素材.' + (curItem.mime.split('/')[1] || 'bin'))); };
-    $('iCopy').onclick = async () => { try { await navigator.clipboard.writeText($('iText').value); toast('已复制'); } catch (e) { $('iText').select(); toast('按 Ctrl+C 或 ⌘C 复制'); } };
+    $('iDel').onclick = function () { twice(this, 'Tap again to delete', async () => { await DB.del('assets', curItem.id); closeModal('itemModal'); renderLib(); toast('Deleted'); }); };
+    $('iDown').onclick = () => { if (curItem && curItem.blob) download(curItem.blob, curItem.name || ('asset.' + (curItem.mime.split('/')[1] || 'bin'))); };
+    $('iCopy').onclick = async () => { try { await navigator.clipboard.writeText($('iText').value); toast('Copied'); } catch (e) { $('iText').select(); toast('Press Ctrl+C  or ⌘C copy'); } };
     $('iEdit').onclick = () => { const a = curItem; closeModal('itemModal'); edOpen({ blob: a.blob, name: a.name, origin: { type: 'asset', id: a.id } }); };
     $('iToNote').onclick = async () => {
-      if (N.images.length >= MAX_IMG) { toast('笔记最多 18 张图'); return; }
-      N.images.push(await shrink(curItem.blob, 1080, 1440)); changed(true); closeModal('itemModal'); toast('已加到当前笔记');
+      if (N.images.length >= MAX_IMG) { toast('A note can have at most 18 photos'); return; }
+      N.images.push(await shrink(curItem.blob, 1080, 1440)); changed(true); closeModal('itemModal'); toast('Added to the current note');
     };
   }
-  /* 选择图片弹窗 */
+  /* image picker */
   let pickCb = null, pickSel = [], pickMulti = true;
   async function openPicker(multi, cb) {
     pickCb = cb; pickSel = []; pickMulti = multi;
     const imgs = (await DB.all('assets')).filter((a) => a.kind === 'image' && a.blob).sort((a, b) => b.updatedAt - a.updatedAt);
     const g = $('pickGrid'); g.innerHTML = '';
-    if (!imgs.length) g.innerHTML = '<p class="hint">素材库里还没有图片。先去素材库上传。</p>';
+    if (!imgs.length) g.innerHTML = '<p class="hint">No images in the library yet. Upload some in the Library first.</p>';
     imgs.forEach((a) => {
       const u = URL.createObjectURL(a.blob); libURLs.push(u);
       const b = document.createElement('button'); b.type = 'button'; b.className = 'pitem'; b.setAttribute('aria-pressed', 'false'); b.title = a.name || '';
@@ -631,16 +631,16 @@
         const i = pickSel.indexOf(a.id);
         if (!pickMulti) { pickSel = [a.id]; } else if (i >= 0) pickSel.splice(i, 1); else pickSel.push(a.id);
         $$('.pitem', g).forEach((x) => { const k = pickSel.indexOf(x.dataset.id); x.setAttribute('aria-pressed', k >= 0); x.querySelector('.ck').textContent = k >= 0 && pickMulti ? k + 1 : ''; });
-        $('pickOk').disabled = !pickSel.length; $('pickInfo').textContent = pickSel.length ? '已选 ' + pickSel.length + ' 张' : '';
+        $('pickOk').disabled = !pickSel.length; $('pickInfo').textContent = pickSel.length ? 'Selected ' + pickSel.length + ' ' : '';
       };
       b.dataset.id = a.id; g.appendChild(b);
     });
     $('pickOk').disabled = true; $('pickInfo').textContent = '';
-    $('pT').textContent = multi ? '从素材库选图片（可多选）' : '从素材库选一张图片';
+    $('pT').textContent = multi ? 'Choose images from library (multi-select)' : 'Choose one image from library';
     openModal('pickModal');
   }
 
-  /* ================= 图片编辑 ================= */
+  /* ================= Image editor ================= */
   const E = { img: null, url: '', name: '', origin: null, rot: 0, flip: false, crop: null, ratio: 0, adj: { b: 0, c: 0, s: 0, t: 0 }, texts: [], sel: -1, mode: 'view', rc: null, k: 1, boxes: [], drag: null };
   const cv = () => $('edCanvas');
   async function edOpen(o) {
@@ -648,8 +648,8 @@
       if (E.url) URL.revokeObjectURL(E.url);
       E.url = o.blob ? URL.createObjectURL(o.blob) : '';
       E.img = await loadImage(E.url || o.src);
-    } catch (e) { toast('这张图片打不开'); return; }
-    E.name = o.name || '图片'; E.origin = o.origin || null;
+    } catch (e) { toast('This image can’t be opened'); return; }
+    E.name = o.name || 'Images'; E.origin = o.origin || null;
     E.rot = 0; E.flip = false; E.ratio = 0; E.adj = { b: 0, c: 0, s: 0, t: 0 }; E.texts = []; E.sel = -1; E.mode = 'view';
     buildRot(); E.crop = { x: 0, y: 0, w: E.rc.width, h: E.rc.height };
     syncEdPanel();
@@ -678,15 +678,15 @@
     $('edPanel').classList.toggle('off', !has);
     $('edEmpty').hidden = has; cv().hidden = !has;
     $('edResetAll').hidden = !has;
-    $('edName').textContent = has ? E.name : '图片编辑';
+    $('edName').textContent = has ? E.name : 'image editor';
     $('edSize').textContent = has && E.crop ? Math.round(E.crop.w) + '×' + Math.round(E.crop.h) : '';
     const o = E.origin;
-    $('edOrigin').textContent = !has ? '' : o && o.type === 'note' ? '来自笔记，点「保存」会替换笔记里的这张图。' : o && o.type === 'asset' ? '来自素材库，点「保存」会覆盖素材库里的这张图。' : '从电脑打开，点「保存」会存进素材库。';
-    $('edSave').textContent = o && o.type === 'note' ? '保存到笔记' : o && o.type === 'asset' ? '保存（覆盖素材库原图）' : '保存到素材库';
-    $('edCropBtn').setAttribute('aria-pressed', E.mode === 'crop'); $('edCropBtn').textContent = E.mode === 'crop' ? '完成裁剪' : '开始裁剪';
+    $('edOrigin').textContent = !has ? '' : o && o.type === 'note' ? 'From a note. Click 「Save」 to replace this photo in the note.' : o && o.type === 'asset' ? 'From the library. Click 「Save」 to overwrite this image in the library.' : 'Opened from your computer. Click 「Save」 to save it to the library.';
+    $('edSave').textContent = o && o.type === 'note' ? 'Save to note' : o && o.type === 'asset' ? 'Save (overwrite library original)' : 'Save to library';
+    $('edCropBtn').setAttribute('aria-pressed', E.mode === 'crop'); $('edCropBtn').textContent = E.mode === 'crop' ? 'Finish crop' : 'Start crop';
     $$('#edRatios button').forEach((b) => b.setAttribute('aria-pressed', Number(b.dataset.r) === E.ratio));
     $$('[data-adj]').forEach((r) => { r.value = E.adj[r.dataset.adj]; r.nextElementSibling.value = E.adj[r.dataset.adj]; });
-    $('edHint').textContent = E.mode === 'crop' ? '拖动四个角调整大小，拖动框内移动位置。调好后点「完成裁剪」。' : '点图上的文字可以选中，按住拖动可以移动位置。';
+    $('edHint').textContent = E.mode === 'crop' ? 'Drag the corners to resize, drag inside to move. When done, click 「Finish crop」。' : 'Click text on the image to select it, hold and drag to move it.';
     syncTextForm();
   }
   function syncTextForm() {
@@ -700,7 +700,7 @@
     $('tfStrokeW').value = t.strokeW; $('tfStrokeWO').value = t.strokeW;
     $('tfBg').value = t.bg; $('tfBgOn').checked = !!t.bgOn;
   }
-  /* 调色：直接处理像素 */
+  /* adjust: work on pixels directly */
   function applyAdj(ctx, w, h) {
     const { b, c, s, t } = E.adj; if (!b && !c && !s && !t) return;
     const d = ctx.getImageData(0, 0, w, h), p = d.data;
@@ -719,9 +719,9 @@
     const key = t.weight + ' ' + t.font;
     if (fontsReady.has(key) || !document.fonts || !document.fonts.load) return;
     fontsReady.add(key);
-    document.fonts.load(t.weight + ' 40px "' + t.font + '"', t.text || '字').then(() => requestAnimationFrame(edRender)).catch(() => { });
+    document.fonts.load(t.weight + ' 40px "' + t.font + '"', t.text || 'char').then(() => requestAnimationFrame(edRender)).catch(() => { });
   }
-  /* 画一段文字，返回在画布上的范围 */
+  /* draw a text block, return its box on the canvas */
   function drawText(ctx, t, W, H, s) {
     ensureFont(t);
     const fs = t.size / 100 * W * s, lines = (t.text || ' ').split('\n'), lh = fs * 1.22;
@@ -844,12 +844,12 @@
   const canvasBlob = (c, type, q) => new Promise((res) => c.toBlob(res, type, q));
   async function edSaveToLib(asNew) {
     const blob = await canvasBlob(exportCanvas(2400), 'image/jpeg', 0.92), t = Date.now();
-    const base = (E.name || '图片').replace(/\.[a-z0-9]+$/i, '');
+    const base = (E.name || 'Images').replace(/\.[a-z0-9]+$/i, '');
     if (!asNew && E.origin && E.origin.type === 'asset') {
       const a = await DB.get('assets', E.origin.id);
       if (a) { a.blob = blob; a.mime = 'image/jpeg'; a.size = blob.size; a.updatedAt = t; await DB.put('assets', a); return a.id; }
     }
-    const a = { id: uid(), kind: 'image', name: base + (asNew && E.origin ? '（编辑）' : '') + '.jpg', mime: 'image/jpeg', size: blob.size, blob, note: '', createdAt: t, updatedAt: t };
+    const a = { id: uid(), kind: 'image', name: base + (asNew && E.origin ? '（ (edited)' : '') + '.jpg', mime: 'image/jpeg', size: blob.size, blob, note: '', createdAt: t, updatedAt: t };
     await DB.put('assets', a);
     if (!E.origin) { E.origin = { type: 'asset', id: a.id }; E.name = a.name; }
     return a.id;
@@ -862,11 +862,11 @@
       else { const n = await DB.get('notes', o.noteId); if (n) { n.images[o.index] = d; n.updatedAt = Date.now(); await DB.put('notes', n); } }
       return;
     }
-    if (N.images.length >= MAX_IMG) { toast('笔记最多 18 张图'); return false; }
+    if (N.images.length >= MAX_IMG) { toast('A note can have at most 18 photos'); return false; }
     N.images.push(d); changed(true);
   }
   function newText() {
-    return { text: '双击这里改文字', x: 0.5, y: 0.2, size: 9, font: 'Smiley Sans Oblique', weight: 400, color: '#1F4A3A', stroke: '#FFFFFF', strokeW: 10, bg: '#F6C445', bgOn: false };
+    return { text: 'Double-click to edit', x: 0.5, y: 0.2, size: 9, font: 'Smiley Sans Oblique', weight: 400, color: '#1F4A3A', stroke: '#FFFFFF', strokeW: 10, bg: '#F6C445', bgOn: false };
   }
   function bindEditor() {
     bindCanvas();
@@ -890,7 +890,7 @@
     $('edFlip').onclick = () => { E.flip = !E.flip; buildRot(); const W = E.rc.width; E.crop.x = W - E.crop.x - E.crop.w; edRender(); };
     $$('[data-adj]').forEach((r) => { r.oninput = () => { E.adj[r.dataset.adj] = Number(r.value); r.nextElementSibling.value = r.value; edRenderSoon(); }; });
     $('edAdjReset').onclick = () => { E.adj = { b: 0, c: 0, s: 0, t: 0 }; edRender(); };
-    $('edResetAll').onclick = function () { twice(this, '再点一次还原成原图', () => { E.rot = 0; E.flip = false; E.ratio = 0; E.adj = { b: 0, c: 0, s: 0, t: 0 }; E.texts = []; E.sel = -1; E.mode = 'view'; buildRot(); E.crop = { x: 0, y: 0, w: E.rc.width, h: E.rc.height }; edRender(); }); };
+    $('edResetAll').onclick = function () { twice(this, 'Tap again to reset to the original', () => { E.rot = 0; E.flip = false; E.ratio = 0; E.adj = { b: 0, c: 0, s: 0, t: 0 }; E.texts = []; E.sel = -1; E.mode = 'view'; buildRot(); E.crop = { x: 0, y: 0, w: E.rc.width, h: E.rc.height }; edRender(); }); };
     $('edAddText').onclick = () => {
       if (E.mode === 'crop') E.mode = 'view';
       const t = newText(); t.y = Math.min(0.85, 0.2 + E.texts.length * 0.12); E.texts.push(t); E.sel = E.texts.length - 1; edRender();
@@ -920,19 +920,19 @@
       if (!E.img) return;
       E.mode = 'view'; E.sel = -1; edRender();
       try {
-        if (E.origin && E.origin.type === 'note') { await edSaveToNote(false); toast('已保存到笔记'); }
-        else { await edSaveToLib(false); toast('已保存到素材库'); }
-        $('edSaveHint').textContent = '上次保存：' + fmtTime(Date.now());
+        if (E.origin && E.origin.type === 'note') { await edSaveToNote(false); toast('Saved to the note'); }
+        else { await edSaveToLib(false); toast('Saved to the library'); }
+        $('edSaveHint').textContent = 'Last saved: ' + fmtTime(Date.now());
         syncEdPanel();
       } catch (e) { saveFailed(e); }
     };
-    $('edSaveLib').onclick = async () => { if (!E.img) return; try { await edSaveToLib(true); toast('已另存到素材库'); } catch (e) { saveFailed(e); } };
-    $('edToNote').onclick = async () => { if (!E.img) return; if ((await edSaveToNote(true)) !== false) toast('已加到当前笔记的最后一张'); };
-    $('edDownload').onclick = async () => { if (!E.img) return; const b = await canvasBlob(exportCanvas(2400), 'image/jpeg', 0.92); download(b, (E.name || '图片').replace(/\.[a-z0-9]+$/i, '') + '-编辑.jpg'); };
+    $('edSaveLib').onclick = async () => { if (!E.img) return; try { await edSaveToLib(true); toast('Saved as a new asset in the library'); } catch (e) { saveFailed(e); } };
+    $('edToNote').onclick = async () => { if (!E.img) return; if ((await edSaveToNote(true)) !== false) toast('Added as the last photo of the current note'); };
+    $('edDownload').onclick = async () => { if (!E.img) return; const b = await canvasBlob(exportCanvas(2400), 'image/jpeg', 0.92); download(b, (E.name || 'Images').replace(/\.[a-z0-9]+$/i, '') + '--edited.jpg'); };
     $('pickOk').onclick = () => { closeModal('pickModal'); if (pickCb) pickCb(pickSel.slice()); };
   }
 
-  /* ================= 启动 ================= */
+  /* ================= boot ================= */
   async function boot(reload) {
     if (!reload) {
       await DB.open();
@@ -950,7 +950,7 @@
     const cur = await DB.get('kv', 'current');
     N = normalizeNote((cur && notes.find((n) => n.id === cur.noteId)) || notes.sort((a, b) => b.updatedAt - a.updatedAt)[0]);
     fillAccount(); renderAccount(); loadNoteIntoUI(); updateDraftCount();
-    setStatus(DB.ok ? '内容会自动保存' : '这个浏览器不能长期保存，关掉页面前请导出备份', DB.ok ? '' : 'warn');
+    setStatus(DB.ok ? 'Content is saved automatically' : 'This browser can’t store long-term. Export a backup before closing the page', DB.ok ? '' : 'warn');
     if (reload) renderLib();
   }
   window.addEventListener('hashchange', route);
